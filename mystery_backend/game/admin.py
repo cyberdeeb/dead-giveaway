@@ -1,41 +1,43 @@
 from django.contrib import admin
-from .models import Case, Suspect
-
-
-@admin.register(Suspect)
-class SuspectAdmin(admin.ModelAdmin):
-    list_display = ['name', 'occupation', 'case', 'is_culprit']
-    list_filter = ['is_culprit', 'occupation', 'case']
-    search_fields = ['name', 'occupation', 'motive']
-    ordering = ['case', 'name']
-    
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('case', 'name', 'occupation', 'is_culprit')
-        }),
-        ('Character Details', {
-            'fields': ('traits', 'motive')
-        }),
-    )
+from .models import Case, Suspect, Clue, ClueImplication, RedHerring
 
 
 @admin.register(Case)
 class CaseAdmin(admin.ModelAdmin):
-    list_display = ['title', 'difficulty', 'status', 'culprit_id', 'created_at']
-    list_filter = ['difficulty', 'status', 'created_at']
-    search_fields = ['title', 'seed']
+    list_display = ['title', 'setting', 'difficulty', 'num_suspects', 'num_clues', 'created_at']
+    list_filter = ['difficulty', 'created_at']
+    search_fields = ['title', 'setting']
     ordering = ['-created_at']
     readonly_fields = ['created_at']
-    
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('title', 'difficulty', 'status')
-        }),
-        ('Case Details', {
-            'fields': ('seed', 'culprit_id', 'timeline')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at',),
-            'classes': ('collapse',)
-        }),
-    )
+
+
+@admin.register(Suspect)
+class SuspectAdmin(admin.ModelAdmin):
+    list_display = ['sid', 'name', 'case', 'bio']
+    list_filter = ['case']
+    search_fields = ['name', 'sid', 'bio']
+    ordering = ['case', 'sid']
+
+
+@admin.register(Clue)
+class ClueAdmin(admin.ModelAdmin):
+    list_display = ['cid', 'category', 'text', 'case']
+    list_filter = ['category', 'case']
+    search_fields = ['cid', 'text']
+    ordering = ['case', 'cid']
+
+
+@admin.register(ClueImplication)
+class ClueImplicationAdmin(admin.ModelAdmin):
+    list_display = ['clue', 'suspect_sid', 'case']
+    list_filter = ['case']
+    search_fields = ['suspect_sid']
+    ordering = ['case', 'clue']
+
+
+@admin.register(RedHerring)
+class RedHerringAdmin(admin.ModelAdmin):
+    list_display = ['rid', 'text', 'case']
+    list_filter = ['case']
+    search_fields = ['rid', 'text']
+    ordering = ['case', 'rid']
