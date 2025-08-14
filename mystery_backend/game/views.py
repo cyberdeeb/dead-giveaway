@@ -24,9 +24,9 @@ class CaseCreateAPIView(APIView):
         
         with transaction.atomic():
             case = Case.objects.create(
-                title=validated_mystery['title'],
-                setting=validated_mystery['setting'],
-                culprit_id=validated_mystery['culprit_id'],
+                title=validated_mystery.title,
+                setting=validated_mystery.setting,
+                culprit_id_hidden=validated_mystery.culprit_id,
                 difficulty=diff,
                 num_suspects=profile['num_suspects'],
                 num_clues=profile['num_clues'],
@@ -45,12 +45,25 @@ class CaseCreateAPIView(APIView):
                 RedHerring.objects.create(case=case, rid=red_herring.id, text=red_herring.text) 
 
         return Response({'id': case.id}, status=status.HTTP_201_CREATED)
-    
-    class CaseDetailApiView(APIView):
-        def get(self, request, pk):
-            case = get_object_or_404(Case, pk=pk)
-            return Response(CasePublicSerializer(case).data)
-        
-    class GuessAPIView(APIView):
-        pass
-    
+
+
+class CaseDetailAPIView(APIView):
+    def get(self, request, pk):
+        case = get_object_or_404(Case, pk=pk)
+        return Response(CasePublicSerializer(case).data)
+
+
+class GuessAPIView(APIView):
+    def post(self, request, pk):
+        case = get_object_or_404(Case, pk=pk)
+        suspect_id = request.data.get("suspect_id")
+        if not suspect_id:
+            return Response({"error": "suspect_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not Suspect.objects.filter(case=case, sid=suspect_id).exists():
+            return Response({"error": "Invalid suspect_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if suspect_id == case.culprit_id_hidden:
+            return Response({"answer": True}, status=status.HTTP_200_OK)
+        else:
+            return Response({"answer": False}, status=status.HTTP_200_OK)

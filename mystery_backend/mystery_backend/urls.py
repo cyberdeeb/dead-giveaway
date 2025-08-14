@@ -16,7 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from game.views import CaseCreateAPIView, CaseDetailAPIView, GuessAPIView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
+    path("api/cases/", CaseCreateAPIView.as_view()),
+    path("api/cases/<int:pk>/", CaseDetailAPIView.as_view()),
+    path("api/cases/<int:pk>/guess/", GuessAPIView.as_view()),
 ]

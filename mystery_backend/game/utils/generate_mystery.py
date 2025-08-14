@@ -17,13 +17,31 @@ def generate_mystery_plot(*, difficulty: str) -> Dict[str, Any]:
     Difficulty: {diff}.
     Use EXACTLY {num_suspects} suspects with ids S1..S{num_suspects}.
     Create EXACTLY {num_clues} clues with ids C1..C{num_clues}, and EXACTLY {num_red_herrings} red herrings R1..R{num_red_herrings}.
-    Rules:
+    
+    IMPORTANT RULES:
     - culprit_id MUST be one of the suspects' ids.
     - Each clue's 'implicates' must list 1–2 suspect ids from the suspects list.
     - At least 2 clues must implicate the culprit.
     - Each non-culprit must be implicated by at least 1 clue.
-    - Keep all text concise: bios ≤200 chars, clues ≤200 chars. PG-13, no real people, no gore.
-    Return JSON with keys: title, setting, suspects, culprit_id, clues, red_herrings, why_unique.
+    - Clue categories MUST be exactly one of: "timeline", "forensic", "behavioral", "financial"
+    - Keep all text concise: bios ≤200 chars, clue text ≤200 chars. PG-13, no real people, no gore.
+    
+    Return JSON with this exact structure:
+    {{
+        "title": "Case title",
+        "setting": "Location description", 
+        "suspects": [
+            {{"id": "S1", "name": "Name", "bio": "Description"}}
+        ],
+        "culprit_id": "S1",
+        "clues": [
+            {{"id": "C1", "category": "timeline", "text": "Clue description", "implicates": ["S1"]}}
+        ],
+        "red_herrings": [
+            {{"id": "R1", "text": "False clue"}}
+        ],
+        "why_unique": "What makes this case special"
+    }}
     """
 
     response = client.chat.completions.create(

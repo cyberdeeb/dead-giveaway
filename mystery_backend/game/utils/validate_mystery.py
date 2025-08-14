@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from mystery_backend.game.schemas import MysteryOut
+from ..schemas import MysteryOut
 
 def validate_mystery(mystery_data: Dict[str, Any]) -> MysteryOut:
 
