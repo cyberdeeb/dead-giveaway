@@ -19,6 +19,6 @@ DIFFICULTY_PROFILES = {
 def get_difficulty_profile(difficulty):
     difficulty = difficulty.lower()
     if difficulty in DIFFICULTY_PROFILES:
-        return DIFFICULTY_PROFILES[difficulty]
+        return difficulty, DIFFICULTY_PROFILES[difficulty]
     else:
-        return DIFFICULTY_PROFILES['medium']
+        return 'medium', DIFFICULTY_PROFILES['medium']

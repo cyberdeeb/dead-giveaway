@@ -6,7 +6,7 @@ from ..config import get_difficulty_profile
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_mystery_plot(*, difficulty: str) -> Dict[str, Any]:
-    profile = get_difficulty_profile(difficulty)
+    diff, profile = get_difficulty_profile(difficulty)
 
     num_suspects = profile['num_suspects']
     num_clues = profile['num_clues']
@@ -14,7 +14,7 @@ def generate_mystery_plot(*, difficulty: str) -> Dict[str, Any]:
 
     system = 'You produce murder mysteries as strict JSON.'
     user = f"""
-    Difficulty: {difficulty}.
+    Difficulty: {diff}.
     Use EXACTLY {num_suspects} suspects with ids S1..S{num_suspects}.
     Create EXACTLY {num_clues} clues with ids C1..C{num_clues}, and EXACTLY {num_red_herrings} red herrings R1..R{num_red_herrings}.
     Rules:
