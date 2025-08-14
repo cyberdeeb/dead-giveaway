@@ -38,8 +38,35 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'game',
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        # Global rates
+        "anon": "50/hour",          
+        "user": "100/hour",         
+        
+        # Specific operation rates
+        "case_create": "20/hour",    
+        "case_view": "100/hour",     
+        "guess": "50/hour",          
+    },
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Dead Giveaway - A Mystery Game API",
+    "DESCRIPTION": "Generate and play AI-created mystery cases.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
