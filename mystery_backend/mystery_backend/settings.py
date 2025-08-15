@@ -100,27 +100,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'mystery_backend.wsgi.application'
 
 
-# Database configuration for Neon PostgreSQL
-try:
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-            conn_max_age=600,
-            conn_health_checks=True,
-            options={
-                'sslmode': 'require',  # Required for Neon
-            }
-        )
-    }
-except ImportError:
-    # Fallback for local development without dj-database-url
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+# Database - automatically uses Neon if DATABASE_URL exists, SQLite otherwise
+import dj_database_url
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
+    )
+}
 
 
 # Password validation
