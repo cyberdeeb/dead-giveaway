@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "mystery_backend/mystery_backend/wsgi.py",
+      "use": "@railway/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "mystery_backend/mystery_backend/wsgi.py"
+    }
+  ]
+}

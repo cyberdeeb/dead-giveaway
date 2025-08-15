@@ -13,17 +13,21 @@ from .serializers import CasePublicSerializer
 from .utils.generate_mystery import generate_mystery_plot
 from .utils.validate_mystery import validate_mystery
 
-# Custom throttle classes for different operations
+# Custom throttle classes to control API usage and costs
 class CaseCreateThrottle(AnonRateThrottle):
+    """Limits mystery creation"""
     scope = 'case_create'
 
 class CaseViewThrottle(AnonRateThrottle):
+    """Higher limit for viewing cases"""
     scope = 'case_view'
 
 class GuessThrottle(AnonRateThrottle):
+    """Moderate limit for guess submissions"""
     scope = 'guess'
 
 class CaseCreateAPIView(APIView):
+    """Creates new mystery cases using OpenAI API"""
     throttle_classes = [CaseCreateThrottle, UserRateThrottle]
     
     @extend_schema(
@@ -53,35 +57,44 @@ class CaseCreateAPIView(APIView):
         }
     )
     def post(self, request):
+        # Get difficulty level from query params or request body, default to medium
         difficulty = request.query_params.get('difficulty') or request.data.get('difficulty') or 'medium'
         diff, profile = get_difficulty_profile(difficulty)
 
+        # Generate mystery using OpenAI API
         raw_mystery = generate_mystery_plot(difficulty=diff)
 
+        # Validate the AI generated data structure
         try:
             validated_mystery = validate_mystery(raw_mystery)
         except AssertionError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Create all related objects in a single transaction
         with transaction.atomic():
+            # Create the main case record
             case = Case.objects.create(
                 title=validated_mystery.title,
                 setting=validated_mystery.setting,
-                culprit_id_hidden=validated_mystery.culprit_id,
+                culprit_id_hidden=validated_mystery.culprit_id,  # Hidden
                 difficulty=diff,
                 num_suspects=profile['num_suspects'],
                 num_clues=profile['num_clues'],
                 num_red_herrings=profile['num_red_herrings'],
             )
 
+            # Create suspects
             for suspect in validated_mystery.suspects:
                 Suspect.objects.create(case=case, sid=suspect.id, name=suspect.name, bio=suspect.bio)
 
+            # Create clues and their suspect implications
             for clue in validated_mystery.clues:
                 clue_obj = Clue.objects.create(case=case, cid=clue.id, category=clue.category, text=clue.text)
+                # Link clue to suspects it implicates
                 for sid in clue.implicates:
                     ClueImplication.objects.create(case=case, clue=clue_obj, suspect_sid=sid)
 
+            # Create red herrings (false clues)
             for red_herring in validated_mystery.red_herrings:
                 RedHerring.objects.create(case=case, rid=red_herring.id, text=red_herring.text) 
 
@@ -89,6 +102,7 @@ class CaseCreateAPIView(APIView):
 
 
 class CaseDetailAPIView(APIView):
+    """Retrieves case details for gameplay"""
     throttle_classes = [CaseViewThrottle, UserRateThrottle]
     
     @extend_schema(
@@ -105,10 +119,12 @@ class CaseDetailAPIView(APIView):
     )
     def get(self, request, pk):
         case = get_object_or_404(Case, pk=pk)
+        # Use public serializer to hide culprit identity
         return Response(CasePublicSerializer(case).data)
 
 
 class GuessAPIView(APIView):
+    """Handles guess submissions and determines if player solved the mystery."""
     throttle_classes = [GuessThrottle, UserRateThrottle]
     
     @extend_schema(
@@ -225,9 +241,10 @@ class GuessAPIView(APIView):
         if not Suspect.objects.filter(case=case, sid=suspect_id).exists():
             return Response({"error": "Invalid suspect_id for this case"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if the guess is correct
+        # Compare guess with hidden culprit identity
         is_correct = suspect_id == case.culprit_id_hidden
         
+        # Return result with personalized feedback
         return Response({
             "correct": is_correct,
             "message": f"Congratulations! You solved the mystery. {suspect_id} was indeed the culprit!" if is_correct else f"Incorrect! {suspect_id} is not the culprit. Keep investigating!"

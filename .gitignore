@@ -144,6 +144,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# Production static files
+staticfiles/
+
+# Railway deployment
+.railway/
+
 # Spyder project settings
 .spyderproject
 .spyproject
